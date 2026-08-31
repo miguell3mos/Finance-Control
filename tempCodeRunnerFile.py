@@ -1,5 +1,22 @@
 transacoes = []
+
 saldo = 0
+
+def mostrar_saldo():
+    print("="*30)
+    print("Ver Saldo")
+    print(f"Saldo atual: R$ {saldo:.2f}")
+
+def consultar_transacoes():
+    if not transacoes:
+        print("="*30)
+        print("Não há transações registradas.")
+    else:
+        print("="*30)
+        print("Consultar Transações")
+        for transacao in transacoes:
+            print(f"Tipo: {transacao['Tipo']}, Descrição: {transacao['Descrição']}, Valor: {transacao['Valor']:.2f}")
+
 while True:
     print("="*30)
     print("      Finance Control")
@@ -40,18 +57,9 @@ while True:
             print("="*30)
             print("Transação não registrada.")
     elif resp == 2:
-        if not transacoes:
-            print("="*30)
-            print("Não há transações registradas.")
-        else:
-            print("="*30)
-            print("Consultar Transações")
-            for transacao in transacoes:
-                print(f"Tipo: {transacao['Tipo']}, Descrição: {transacao['Descrição']}, Valor: {transacao['Valor']:.2f}")
+        consultar_transacoes()
     elif resp == 3:
-        print("="*30)
-        print("Ver Saldo")
-        print(f"Saldo atual: R$ {saldo:.2f}")
+        mostrar_saldo()
     elif resp == 4:
         print("="*30)
         print("Saindo do programa...")
