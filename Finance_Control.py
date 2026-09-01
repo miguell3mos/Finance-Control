@@ -1,77 +1,10 @@
-import sqlite3
-conexao = sqlite3.connect("finance_control.db")
-cursor = conexao.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS transacoes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tipo TEXT,
-    descricao TEXT,
-    valor REAL
-)
-""")
-
-conexao.close()
-
-def calcular_saldo():
-    conexao = sqlite3.connect("finance_control.db")
-    cursor = conexao.cursor()
-
-    cursor.execute("SELECT tipo, valor FROM transacoes")
-    transacoes = cursor.fetchall()
-
-    saldo = 0
-
-    for transacao in transacoes:
-        tipo = transacao[0]
-        valor = transacao[1]
-
-        if tipo == "despesa":
-            saldo -= valor
-        elif tipo == "receita":
-            saldo += valor
-    conexao.close()
-
-    return saldo
-
-def salvar_transacao(transacao):
-    conexao = sqlite3.connect("finance_control.db")
-    cursor = conexao.cursor()
-
-    cursor.execute("""
-    INSERT INTO transacoes (tipo,descricao,valor)
-    VALUES (?, ?, ?)
-    """,(
-        transacao["Tipo"],
-        transacao["Descrição"],
-        transacao["Valor"]
-    ))
-
-    conexao.commit()
-    conexao.close()
+import banco
+banco.criar_tabela()
 
 def mostrar_saldo(saldo):
     print("="*30)
     print("Ver Saldo")
     print(f"Saldo atual: R$ {saldo:.2f}")
-
-def consultar_transacoes():
-    conexao = sqlite3.connect("finance_control.db")
-    cursor = conexao.cursor()
-
-    cursor.execute("SELECT * FROM transacoes")
-    transacoes = cursor.fetchall()
-
-    if not transacoes:
-        print("="*30)
-        print("Não há transações registradas.")
-    else:
-        print("="*30)
-        print("Consultar Transações")
-        for transacao in transacoes:
-            print(f"ID: {transacao[0]}, Tipo: {transacao[1]}, Descrição: {transacao[2]}, Valor: {transacao[3]:.2f}")
-
-    conexao.close()
 
 def registrar_transacao():
         print("="*30)
@@ -87,9 +20,9 @@ def registrar_transacao():
             print("Valor Inválido! Digite apenas números.")
             return None
 
-        if valor <= 0:
+        if not validar_transacao(tipo,valor):
             print("="*30)
-            print("O valor da transação deve ser maior que zero.")
+            print("Tipo ou Valor Inválido! A transação não será registrada.")
             return None
         
         transacao = {
@@ -98,48 +31,15 @@ def registrar_transacao():
             "Valor": valor
         }
         
-        if transacao["Tipo"] == "despesa" or transacao["Tipo"] == "receita":
-            return transacao
-        else:
-            print("="*30)
-            print("Tipo de transação inválido! A transação não será registrada.")
-            return None
+        return transacao
 
-def excluir_transacao(id_transacao):
-    conexao = sqlite3.connect("finance_control.db")
-    cursor = conexao.cursor()
+def validar_transacao(tipo,valor):
+    if tipo != "despesa" and tipo != "receita":
+        return False
+    if valor <= 0:
+        return False
 
-    cursor.execute("""
-    DELETE FROM transacoes
-    WHERE id = ?
-    """, (id_transacao,))
-
-    conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Transação excluída com sucesso.")
-    else:
-        print("Nenhuma Transação encontrada com esse ID.")
-    conexao.close()
-
-def editar_transacao(id_transacao, tipo, descricao, valor):
-    conexao = sqlite3.connect("finance_control.db")
-    cursor = conexao.cursor()
-
-    cursor.execute("""
-    UPDATE transacoes
-    SET tipo = ?, descricao = ?, valor = ?
-    WHERE id = ?
-    """,(tipo, descricao, valor, id_transacao))
-
-    conexao.commit()
-
-    if cursor.rowcount > 0:
-        print("Transação atualizada com sucesso.")
-    else:
-        print("Nenhuma transação foi encontrada com esse ID.")
-
-    conexao.close()
+    return True
 
 while True:
     print("="*30)
@@ -166,21 +66,39 @@ while True:
     if resp == 1:
         transacao = registrar_transacao()
         if transacao is not None:
-            salvar_transacao(transacao)
+            banco.salvar_transacao(transacao)
     elif resp == 2:
-        consultar_transacoes()
+        transacoes = banco.consultar_transacoes()
+        if not transacoes:
+            print("="*30)
+            print("Não há transações registradas.")
+        else:
+            print("="*30)
+            print("Consultar Transações.")
+            for transacao in transacoes:
+                print(
+                    f"ID: {transacao[0]},"
+                    f"Tipo: {transacao[1]},"
+                    f"Descrição: {transacao[2]},"
+                    f"Valor: {transacao[3]:.2f}"
+                )
     elif resp == 3:
-        saldo = calcular_saldo()
+        saldo = banco.calcular_saldo()
         mostrar_saldo(saldo)
     elif resp == 4:
         print("="*30)
         try:
-            id_transacao = int(input("Digite o ID da transação que deseja escluir: "))
+            id_transacao = int(input("Digite o ID da transação que deseja excluir: "))
         except ValueError:
             print("Digite um ID valido!")
             continue
+        
+        excluiu = banco.excluir_transacao(id_transacao)
 
-        excluir_transacao(id_transacao)
+        if excluiu:
+            print("Transação excluída com sucesso.")
+        else:
+            print("Nenhuma transação encontrada com esse ID.")
     elif resp == 5:
         try:
             id_transacao = int(input("Digite o ID da transação que deseja editar: "))
@@ -194,8 +112,12 @@ while True:
         except ValueError:
             print("Valor inválido.")
             continue
-        if valor > 0 and (tipo == "despesa" or tipo == "receita"):
-            editar_transacao(id_transacao, tipo, descricao, valor)
+        if validar_transacao(tipo,valor):
+            editou = banco.editar_transacao(id_transacao, tipo, descricao, valor)
+            if editou:
+                print("Transação atualizada com sucesso.")
+            else:
+                print("Nenhuma transação foi encontrada com esse ID.")
         else:
             print("Valor ou Tipo está inválido.")
     elif resp == 6:
