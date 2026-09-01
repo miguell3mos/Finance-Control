@@ -25,6 +25,14 @@ def registrar_transacao():
         "Descrição" : input("Digite a descrição da transação: "),
         "Valor" : float(input("Digite o valor da transação: "))
         }
+        if transacao["Tipo"].Lower() == "despesa":
+            return transacao
+        elif transacao["Tipo"].Lower() == "receita":
+            return transacao
+        else:
+            print("="*30)
+            print("Tipo de transação inválido! A transação não será registrada.")
+            return None
 
 while True:
     print("="*30)
@@ -41,30 +49,9 @@ while True:
     print("="*30)
     resp = int(input("Digite o número da opção desejada: "))
     if resp == 1:
-        print("="*30)
-        print("Registrar Transação")
-        transacao = {
-        "Tipo" : input("Digite o tipo da transação (Despesa/Receita): "),
-        "Descrição" : input("Digite a descrição da transação: "),
-        "Valor" : float(input("Digite o valor da transação: "))
-        }
-        if transacao["Tipo"].lower() == "despesa":
-            saldo -= transacao["Valor"]
-            valido = True
-        elif transacao["Tipo"].lower() == "receita":
-            saldo += transacao["Valor"]
-            valido = True
-        else:
-            print("="*30)
-            print("Tipo de transação inválido! A transação não será registrada.")
-            valido = False
-        if valido:
+        transacao = registrar_transacao()
+        if transacao is not None:
             transacoes.append(transacao)
-            print("="*30)
-            print("Transação registrada com sucesso!")
-        else:
-            print("="*30)
-            print("Transação não registrada.")
     elif resp == 2:
         consultar_transacoes()
     elif resp == 3:
