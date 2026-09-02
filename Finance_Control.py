@@ -1,4 +1,5 @@
 import banco
+from datetime import datetime
 banco.criar_tabela()
 
 def mostrar_saldo(saldo):
@@ -24,11 +25,19 @@ def registrar_transacao():
             print("="*30)
             print("Tipo ou Valor Inválido! A transação não será registrada.")
             return None
+        categoria = escolher_categoria()
+        if categoria is None:
+            print("Categoria Inválida!")
+            return None
         
+        data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         transacao = {
             "Tipo": tipo,
             "Descrição": descricao,
-            "Valor": valor
+            "Valor": valor,
+            "Categoria": categoria,
+            "Data": data
         }
         
         return transacao
@@ -41,8 +50,33 @@ def validar_transacao(tipo,valor):
 
     return True
 
-while True:
+def escolher_categoria():
     print("="*30)
+    print("Categorias")
+    print("1- Alimentação")
+    print("2- Transporte")
+    print("3- Lazer")
+    print("4- Estudos")
+    print("5- Salário")
+    print("6- Outros")
+
+    try:
+        opcao = int(input("Escolha uma categoria: "))
+    except ValueError:
+        return None
+
+    categorias = {
+        1: "alimentação",
+        2: "transporte",
+        3: "lazer",
+        4: "estudos",
+        5: "salário",
+        6: "outros"
+    }
+    return categorias.get(opcao)
+
+while True:
+    print("="*30) 
     print("      Finance Control")
     print("="*30)
     print("Bem-vindo ao Finance Control!")
@@ -76,11 +110,18 @@ while True:
             print("="*30)
             print("Consultar Transações.")
             for transacao in transacoes:
+                data_banco = transacao[5]
+                data_formatada = datetime.strptime(
+                    data_banco,
+                    "%Y-%m-%d %H:%M:%S"
+                ).strftime("%d/%m/%Y %H:%M")
                 print(
                     f"ID: {transacao[0]},"
-                    f"Tipo: {transacao[1]},"
-                    f"Descrição: {transacao[2]},"
-                    f"Valor: {transacao[3]:.2f}"
+                    f" Tipo: {transacao[1]},"
+                    f" Descrição: {transacao[2]},"
+                    f" Valor: {transacao[3]:.2f},"
+                    f" Categoria: {transacao[4]},"
+                    f" Data: {data_formatada}"
                 )
     elif resp == 3:
         saldo = banco.calcular_saldo()

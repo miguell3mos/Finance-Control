@@ -1,7 +1,10 @@
 import sqlite3
 
+def conectar():
+    return sqlite3.connect("finance_control.db")
+
 def criar_tabela():
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("""
@@ -9,23 +12,27 @@ def criar_tabela():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tipo TEXT,
         descricao TEXT,
-        valor REAL
+        valor REAL,
+        categoria TEXT,
+        data TEXT
     )
     """)
 
     conexao.close()
 
 def salvar_transacao(transacao):
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("""
-    INSERT INTO transacoes (tipo,descricao,valor)
-    VALUES (?, ?, ?)
+    INSERT INTO transacoes (tipo,descricao,valor,categoria,data)
+    VALUES (?, ?, ?, ?, ?)
     """,(
         transacao["Tipo"],
         transacao["Descrição"],
-        transacao["Valor"]
+        transacao["Valor"],
+        transacao["Categoria"],
+        transacao["Data"]
     ))
 
     conexao.commit()
@@ -33,17 +40,20 @@ def salvar_transacao(transacao):
 
 
 def consultar_transacoes():
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
-    cursor.execute("SELECT * FROM transacoes")
+    cursor.execute("""
+    SELECT * FROM transacoes
+    ORDER BY data DESC
+    """)
     transacoes = cursor.fetchall()
 
     conexao.close()
     return transacoes
 
 def calcular_saldo():
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("SELECT tipo, valor FROM transacoes")
@@ -65,7 +75,7 @@ def calcular_saldo():
 
 
 def excluir_transacao(id_transacao):
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("""
@@ -86,7 +96,7 @@ def excluir_transacao(id_transacao):
 
 
 def editar_transacao(id_transacao, tipo, descricao, valor):
-    conexao = sqlite3.connect("finance_control.db")
+    conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("""
