@@ -95,23 +95,84 @@ def excluir_transacao(id_transacao):
     return resultado
 
 
-def editar_transacao(id_transacao, tipo, descricao, valor):
+def editar_transacao(id_transacao, tipo, descricao, valor, categoria):
     conexao = conectar()
     cursor = conexao.cursor()
 
     cursor.execute("""
     UPDATE transacoes
-    SET tipo = ?, descricao = ?, valor = ?
+    SET tipo = ?, descricao = ?, valor = ?, categoria = ?
     WHERE id = ?
-    """,(tipo, descricao, valor, id_transacao))
+    """,(tipo, descricao, valor, categoria,  id_transacao))
 
     conexao.commit()
 
-    if cursor.rowcount > 0:
-        resultado = True
-    else:
-        resultado = False
+    resultado = cursor.rowcount > 0
 
     conexao.close()
 
     return resultado
+
+def buscar_por_categorias(categoria):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+    SELECT * FROM transacoes
+    WHERE categoria = ?
+    ORDER BY data DESC
+    """,(categoria,))
+
+    transacoes = cursor.fetchall()
+
+    conexao.close()
+    return transacoes
+
+
+
+def resumo_por_categoria():
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+    SELECT categoria, SUM(valor)
+    FROM transacoes
+    WHERE tipo = 'despesa'
+    GROUP BY categoria
+    ORDER BY SUM(valor) DESC
+    """)
+    resumo = cursor.fetchall()
+    conexao.close()
+    return resumo
+
+def resumo_mensal(ano,mes):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    periodo = f"{ano}-{mes:02d}%"
+
+    cursor.execute("""
+    SELECT tipo, SUM(valor)
+    FROM transacoes
+    WHERE data LIKE ?
+    GROUP BY tipo
+    """, (periodo,))
+
+    resumo = cursor.fetchall()
+
+    conexao.close()
+    return resumo
+
+def buscar_por_periodo(data_inicio,data_fim):
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+    SELECT * FROM transacoes
+    WHERE data BETWEEN ? AND ?
+    ORDER BY data DESC
+    """, (data_inicio,data_fim))
+
+    transacoes = cursor.fetchall()
+    conexao.close
+    return transacoes

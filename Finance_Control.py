@@ -75,6 +75,22 @@ def escolher_categoria():
     }
     return categorias.get(opcao)
 
+def mostrar_transacoes(transacoes):
+    for transacao in transacoes:
+        data_banco = transacao[5]
+        data_formatada = datetime.strptime(
+            data_banco,
+            "%Y-%m-%d %H:%M:%S"
+        ).strftime("%d/%m/%Y %H:%M")
+        print(
+            f"ID: {transacao[0]}, "
+            f"Tipo: {transacao[1]}, "
+            f"Descrição: {transacao[2]}, "
+            f"Valor: {transacao[3]:.2f}, "
+            f"Categoria: {transacao[4]}, "
+            f"Data: {data_formatada}"
+        )
+
 while True:
     print("="*30) 
     print("      Finance Control")
@@ -87,7 +103,11 @@ while True:
     3- Ver Saldo
     4- Excluir Transação
     5- Editar Transação
-    6- Sair"""
+    6- Filtrar Categorias
+    7- Resumo por Categoria
+    8- Resumo Mensal
+    9- Buscar por Período
+    10- Sair"""
     )
     print("="*30)
     try:
@@ -109,20 +129,7 @@ while True:
         else:
             print("="*30)
             print("Consultar Transações.")
-            for transacao in transacoes:
-                data_banco = transacao[5]
-                data_formatada = datetime.strptime(
-                    data_banco,
-                    "%Y-%m-%d %H:%M:%S"
-                ).strftime("%d/%m/%Y %H:%M")
-                print(
-                    f"ID: {transacao[0]},"
-                    f" Tipo: {transacao[1]},"
-                    f" Descrição: {transacao[2]},"
-                    f" Valor: {transacao[3]:.2f},"
-                    f" Categoria: {transacao[4]},"
-                    f" Data: {data_formatada}"
-                )
+            mostrar_transacoes(transacoes)
     elif resp == 3:
         saldo = banco.calcular_saldo()
         mostrar_saldo(saldo)
@@ -153,8 +160,12 @@ while True:
         except ValueError:
             print("Valor inválido.")
             continue
+        categoria = escolher_categoria()
+        if categoria is None:
+            print("Categoria Inválida!")
+            continue
         if validar_transacao(tipo,valor):
-            editou = banco.editar_transacao(id_transacao, tipo, descricao, valor)
+            editou = banco.editar_transacao(id_transacao, tipo, descricao, valor, categoria)
             if editou:
                 print("Transação atualizada com sucesso.")
             else:
@@ -162,6 +173,69 @@ while True:
         else:
             print("Valor ou Tipo está inválido.")
     elif resp == 6:
+        categoria = escolher_categoria()
+        if categoria is None:
+            print("Categoria Inválida.")
+            continue
+        transacoes = banco.buscar_por_categorias(categoria)
+        if not transacoes:
+            print("Nenhuma transação encontrada nessa categoria.")
+        else:
+            mostrar_transacoes(transacoes) 
+    elif resp == 7:
+        resumo = banco.resumo_por_categoria()
+
+        if not resumo:
+            print("Não há depesas registradas.")
+        else:
+            print("="*30)
+            print("Resumo por Categoria")
+            for categoria, total in resumo:
+                print(f"{categoria.title()}: R$ {total:.2f}")
+    elif resp == 8:
+        try:
+            ano = int(input("Digite o ano: "))
+            mes = int(input("Digite o mês: "))
+        except ValueError:
+            print("Ano e Mês precisam ser números.")
+            continue
+        if mes < 1 or mes > 12:
+            print("Mês inválido.")
+            continue
+        resumo = banco.resumo_mensal(ano,mes)
+        receita = 0
+        despesa = 0
+
+        for tipo, total in resumo:
+            if tipo == "receita":
+                receita = total
+            elif tipo == "despesa":
+                despesa = total
+        saldo_mes = receita - despesa
+
+        print("="*30)
+        print(f"Resumo de {mes:02d}/{ano}")
+        print(f"Receitas: R$ {receita:.2f}")
+        print(f"Despesas: R$ {despesa:.2f}")
+        print(f"Saldo do mês: R$ {saldo_mes:.2f}")
+    elif resp == 9:
+        data_inicio = input("Digite a data inicial (dd/mm/aaaa): ").strip()
+        data_fim = input("Digite a data final (dd/mm/aaaa): ").strip()
+        try:
+            inicio = datetime.strptime(data_inicio, "%d/%m/%Y")
+            fim = datetime.strptime(data_fim, "%d/%m/%Y")
+        except ValueError:
+            print("Data Inválida: use o formato dd/mm/aaaa.")
+            continue
+        inicio_banco = inicio.strftime("%Y-%m-%d 00:00:00")
+        fim_banco = fim.strftime("%Y-%m-%d 23:59:59")
+
+        transacoes = banco.buscar_por_periodo(inicio_banco,fim_banco)
+        if not transacoes:
+            print("Nenhuma transação encontrada nesse período.")
+        else:
+            mostrar_transacoes(transacoes)
+    elif resp == 10:
         print("="*30)
         print("Saindo do programa...")
         break
