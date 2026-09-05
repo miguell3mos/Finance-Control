@@ -86,6 +86,7 @@ def escolher_categoria():
     return categorias.get(opcao)
 
 def mostrar_transacoes(transacoes):
+    """Função para mostrar todas as transações registradas."""
     for transacao in transacoes:
         data_banco = transacao[5]
         data_formatada = datetime.strptime(
