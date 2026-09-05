@@ -1,13 +1,21 @@
+#Imporar dados do banco que contém as funções.
 import banco
+
+#Importar função para usar datas no software.
 from datetime import datetime
+
+#Função de criar tabela para armazenar dados dentro do banco de dados.
 banco.criar_tabela()
 
+
 def mostrar_saldo(saldo):
+    """Função que mostra o saldo atual."""
     print("="*30)
     print("Ver Saldo")
     print(f"Saldo atual: R$ {saldo:.2f}")
 
 def registrar_transacao():
+        """Função completa contendo todos os input para registrar a transação."""
         print("="*30)
         print("Registrar Transação")
         
@@ -43,6 +51,7 @@ def registrar_transacao():
         return transacao
 
 def validar_transacao(tipo,valor):
+    """Função para validar transação se é despesa ou receita e se o valor é maior que zero."""
     if tipo != "despesa" and tipo != "receita":
         return False
     if valor <= 0:
@@ -51,6 +60,7 @@ def validar_transacao(tipo,valor):
     return True
 
 def escolher_categoria():
+    """Função para escolher categória da transação."""
     print("="*30)
     print("Categorias")
     print("1- Alimentação")
